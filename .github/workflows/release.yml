@@ -1,14 +1,16 @@
 name: Release
+
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can choose a different runner if needed
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -23,23 +25,18 @@ jobs:
       - name: Build Shaded JAR
         run: mvn clean package
 
+      - name: Extract Microbot version from pom.xml
+        id: version
+        run: |
+          version=$(grep -oPm1 "(?<=<microbot.version>)[^<]+" runelite-client/pom.xml)
+          echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "1.9.6.1"
+          automatic_release_tag: "${{ steps.version.outputs.version }}"
           prerelease: false
-          title: "Release 1.9.6.1"
+          title: "Release ${{ steps.version.outputs.version }}"
           files: |
-            /home/runner/work/Microbot/Microbot/runelite-client/target/microbot-*.jar
-
-      - name: Upload Jar to Hetzner
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PROD_HOST }}
-          username: root
-          key: ${{ secrets.PROD_SSH_KEY }}
-          source: runelite-client/target/microbot-*.jar
-          target: /var/www/files/releases/microbot/stable/
-          strip_components: 2
+            runelite-client/target/microbot-${{ steps.version.outputs.version }}.jar
