@@ -1344,7 +1344,7 @@ public class ClientUI
 				y -= insets.top;
 			}
 
-			frame.setLocation(x, y);
+			frame.setLocation(null); // Quick fix to center the client.
 
 			if ("g".equals(mode))
 			{
