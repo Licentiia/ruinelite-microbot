@@ -42,6 +42,11 @@
 		<git.dirty>false</git.dirty>
 		<shade.skip>false</shade.skip>
 		<microbot.version>1.9.6.1_1.0.0</microbot.version>
+
+        <jarsigner.keystore>dummy</jarsigner.keystore>
+        <jarsigner.alias>dummy</jarsigner.alias>
+        <jarsigner.storepass>dummy</jarsigner.storepass>
+        <jarsigner.keypass>dummy</jarsigner.keypass>
 	</properties>
 
 	<dependencies>
@@ -449,6 +454,9 @@
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/versions/**/module-info.class</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
 									</excludes>
 								</filter>
 							</filters>
@@ -461,16 +469,6 @@
 									</manifestEntries>
 								</transformer>
 							</transformers>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
 						</configuration>
 					</execution>
 				</executions>
