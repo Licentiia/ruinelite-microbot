@@ -52,15 +52,22 @@ public class SplashScreen extends JFrame implements ActionListener
 	private final JLabel subAction = new JLabel();
 	private final Timer timer;
 
+	private final JLabel duckLabel = new JLabel();
+	private BufferedImage rDuck, lDuck;
+	private boolean movingRight = true;
+	private int duckX = 0;
+	private static final int DUCK_WIDTH = 24;
+	private static final int DUCK_HEIGHT = 24;
+
 	private volatile double overallProgress = 0;
 	private volatile String actionText = "Loading";
 	private volatile String subActionText = "";
 	private volatile String progressText = null;
 	private SplashScreen()
 	{
-		BufferedImage logo = ImageUtil.loadImageResource(SplashScreen.class, "runelite_splash.png");
+		BufferedImage logo = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/ruinelite_splash.png");
 
-		setTitle("Microbot");
+		setTitle("Microbot x RuinElite");
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setUndecorated(true);
@@ -71,11 +78,30 @@ public class SplashScreen extends JFrame implements ActionListener
 
 		Font font = new Font(Font.DIALOG, Font.PLAIN, 12);
 
+		Font titleFont = new Font(Font.DIALOG, Font.BOLD, 14);
+		JLabel titleLabel = new JLabel("Microbot x RuinElite");
+		titleLabel.setForeground(Color.GRAY);
+		titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		titleLabel.setFont(titleFont);
+		pane.add(titleLabel);
+		titleLabel.setBounds(0, 0, WIDTH, 25);
+
+
 		JLabel logoLabel = new JLabel(new ImageIcon(logo));
 		pane.add(logoLabel);
-		logoLabel.setBounds(0, 0, WIDTH, WIDTH);
+		logoLabel.setBounds(0, 20, WIDTH, WIDTH);
 
-		int y = WIDTH;
+		int y = WIDTH + 20;
+
+		rDuck = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/duck/duck-right.png");
+		lDuck = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/duck/duck-left.png");
+
+		duckLabel.setIcon(new ImageIcon(rDuck));
+		duckLabel.setBounds(duckX, y, DUCK_WIDTH, DUCK_HEIGHT);
+		pane.add(duckLabel);
+		y += DUCK_HEIGHT + PAD;
+
+		progress.setVisible(true);
 
 		pane.add(action);
 		action.setForeground(Color.WHITE);
@@ -90,6 +116,7 @@ public class SplashScreen extends JFrame implements ActionListener
 		progress.setBorder(new EmptyBorder(0, 0, 0, 0));
 		progress.setBounds(0, y, WIDTH, 14);
 		progress.setFont(font);
+		progress.setIndeterminate(true);
 		progress.setUI(new BasicProgressBarUI()
 		{
 			@Override
@@ -116,6 +143,8 @@ public class SplashScreen extends JFrame implements ActionListener
 		setSize(WIDTH, y);
 		setLocationRelativeTo(null);
 
+		setShape(new java.awt.geom.RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 20, 20));
+
 		timer = new Timer(100, this);
 		timer.setRepeats(true);
 		timer.start();
@@ -128,6 +157,28 @@ public class SplashScreen extends JFrame implements ActionListener
 	{
 		action.setText(actionText);
 		subAction.setText(subActionText);
+
+		int speed = 5;
+		if (movingRight)
+		{
+			duckX += speed;
+			if (duckX >= WIDTH - DUCK_WIDTH)
+			{
+				movingRight = false;
+				duckLabel.setIcon(new ImageIcon(lDuck));
+			}
+		}
+		else
+		{
+			duckX -= speed;
+			if (duckX <= 0)
+			{
+				movingRight = true;
+				duckLabel.setIcon(new ImageIcon(rDuck));
+			}
+		}
+		duckLabel.setLocation(duckX, duckLabel.getY());
+
 		progress.setMaximum(1000);
 		progress.setValue((int) (overallProgress * 1000));
 
