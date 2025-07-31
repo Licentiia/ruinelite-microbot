@@ -35,14 +35,5 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            /home/runner/work/Microbot/Microbot/runelite-client/target/microbot-*.jar
+            runelite-client/target/microbot-*.jar
 
-      - name: Upload Jar to Hetzner
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PROD_HOST }}
-          username: root
-          key: ${{ secrets.PROD_SSH_KEY }}
-          source: runelite-client/target/microbot-*.jar
-          target: /var/www/files/releases/microbot/nightly/
-          strip_components: 2
