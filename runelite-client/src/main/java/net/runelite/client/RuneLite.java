@@ -362,7 +362,7 @@ public class RuneLite
 				runtimeConfigLoader,
 				developerMode,
 				options.has("safe-mode"),
-				options.has("disable-telemetry"),
+				true,
                 options.has("disable-walker-update"),
 				options.valueOf(sessionfile),
 				(String) options.valueOf("profile"),
