@@ -45,6 +45,8 @@ import java.util.Arrays;
 @Slf4j
 public class SplashScreen extends JFrame implements ActionListener
 {
+	private static final String VERSION = loadVersion();
+
 	private static final int WIDTH = 200;
 	private static final int PAD = 10;
 
@@ -65,6 +67,7 @@ public class SplashScreen extends JFrame implements ActionListener
 	private volatile String actionText = "Loading";
 	private volatile String subActionText = "";
 	private volatile String progressText = null;
+
 	private SplashScreen()
 	{
 		BufferedImage logo = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/ruinelite_splash.png");
@@ -88,12 +91,18 @@ public class SplashScreen extends JFrame implements ActionListener
 		pane.add(titleLabel);
 		titleLabel.setBounds(0, 0, WIDTH, 25);
 
+		JLabel versionLabel = new JLabel("v" + VERSION);
+		versionLabel.setForeground(Color.LIGHT_GRAY);
+		versionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		versionLabel.setFont(new Font(Font.DIALOG, Font.PLAIN, 11));
+		pane.add(versionLabel);
+		versionLabel.setBounds(0, 25, WIDTH, 10);
 
 		JLabel logoLabel = new JLabel(new ImageIcon(logo));
 		pane.add(logoLabel);
-		logoLabel.setBounds(0, 20, WIDTH, WIDTH);
+		logoLabel.setBounds(0, 30, WIDTH, WIDTH);
 
-		int y = WIDTH + 20;
+		int y = WIDTH + 30;
 
 		duckGif = new ImageIcon(Objects.requireNonNull(Rs2Antiban.class.getResource("walkingduckparty.gif")));
 		duckLabel.setIcon(duckGif);
@@ -274,6 +283,20 @@ public class SplashScreen extends JFrame implements ActionListener
 			}
 			INSTANCE.subActionText = subActionText;
 			INSTANCE.progressText = progressText;
+		}
+	}
+
+	private static String loadVersion()
+	{
+		try
+		{
+			var props = new java.util.Properties();
+			props.load(SplashScreen.class.getResourceAsStream("/version.properties"));
+			return props.getProperty("microbot.version", "unknown");
+		}
+		catch (Exception e)
+		{
+			return "unknown";
 		}
 	}
 }
