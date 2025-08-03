@@ -41,7 +41,7 @@
 		<git.commit.id.abbrev>nogit</git.commit.id.abbrev>
 		<git.dirty>false</git.dirty>
 		<shade.skip>false</shade.skip>
-		<microbot.version>1.9.6.1_1.0.0</microbot.version>
+		<microbot.version>1.9.6.1_1.0.1</microbot.version>
 
         <jarsigner.keystore>dummy</jarsigner.keystore>
         <jarsigner.alias>dummy</jarsigner.alias>
@@ -419,20 +419,23 @@
 <!--					</execution>-->
 <!--				</executions>-->
 <!--			</plugin>-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.0.2</version>
-				<configuration>
-					<nonFilteredFileExtensions>
-						<nonFilteredFileExtension>ttf</nonFilteredFileExtension>
-						<nonFilteredFileExtension>png</nonFilteredFileExtension>
-						<nonFilteredFileExtension>gif</nonFilteredFileExtension>
-						<nonFilteredFileExtension>wav</nonFilteredFileExtension>
-						<nonFilteredFileExtension>zip</nonFilteredFileExtension>
-					</nonFilteredFileExtensions>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <nonFilteredFileExtensions>
+                        <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>png</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>gif</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>wav</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>zip</nonFilteredFileExtension>
+                    </nonFilteredFileExtensions>
+                    <delimiters>
+                        <delimiter>@</delimiter>
+                    </delimiters>
+                </configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
