@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+//TODO This script needs to be refined - walking back to mining after hopper deposit etc. see todo logs.
+
 @Slf4j
 public class MotherloadMineScript extends Script
 {
@@ -264,39 +266,66 @@ public class MotherloadMineScript extends Script
         }
     }
 
-    private void depositHopper()
-    {
-        // if using a gem bag, fill the gem bag and return to mining if the inventory is no longer full
-        if (Rs2Inventory.isFull() && Rs2Gembag.hasGemBag())
-        {
-            Rs2Inventory.interact("gem bag", "Fill");
-            gemBagEmptiedThisCycle = false;
-            if (!Rs2Inventory.isFull())
-            {
-                return;
-            }
-        }
+	private void depositHopper()
+	{
+		// Fill gem bag if possible before hopper
+		if (Rs2Inventory.isFull() && Rs2Gembag.hasGemBag())
+		{
+			Rs2Inventory.interact("gem bag", "Fill");
+			gemBagEmptiedThisCycle = false;
+			if (!Rs2Inventory.isFull())
+			{
+				return;
+			}
+		}
 
-        WorldPoint hopperDeposit = (isUpperFloor() && config.upstairsHopperUnlocked()) ? HOPPER_DEPOSIT_UP : HOPPER_DEPOSIT_DOWN;
-        Optional<GameObject> hopper = Optional.ofNullable(Rs2GameObject.findObject(ObjectID.HOPPER_26674, hopperDeposit));
+		WorldPoint hopperDeposit = (isUpperFloor() && config.upstairsHopperUnlocked()) ? HOPPER_DEPOSIT_UP : HOPPER_DEPOSIT_DOWN;
+		Optional<GameObject> hopper = Optional.ofNullable(Rs2GameObject.findObject(ObjectID.HOPPER_26674, hopperDeposit));
 
-        if(isUpperFloor() && !config.upstairsHopperUnlocked())
-        {
-            ensureLowerFloor();
-        }
-        if (hopper.isPresent() && Rs2GameObject.interact(hopper.get()))
-        {
-            sleepUntil(() -> !Rs2Inventory.isFull());
-            if (Microbot.getVarbitValue(Varbits.SACK_NUMBER) > maxSackSize - 28)
-            {
-                shouldEmptySack = true;
-            }
-        }
-        else
-        {
-            Rs2Walker.walkTo(hopperDeposit, 15);
-        }
-    }
+		if (isUpperFloor() && !config.upstairsHopperUnlocked())
+		{
+			ensureLowerFloor();
+			return;
+		}
+
+		// Always reselect mining spot
+		selectMiningSpotFromConfig();
+		WorldPoint nextMiningTile = null;
+
+		if (miningSpot.getWorldPoint() != null && !miningSpot.getWorldPoint().isEmpty())
+		{
+			nextMiningTile = miningSpot.getWorldPoint().get(0);
+
+			// Preload path by intentionally failing due to small range
+			Microbot.status = "DEBUG: Pre-loading mining path";
+			Rs2Walker.walkTo(nextMiningTile, 0); // preload only – will not move player
+		}
+
+		if (hopper.isPresent() && Rs2GameObject.interact(hopper.get()))
+		{
+			sleepUntil(() -> !Rs2Inventory.isFull());
+
+			if (!Rs2Inventory.isFull())
+			{
+				if (Microbot.getVarbitValue(Varbits.SACK_NUMBER) > maxSackSize - 28)
+				{
+					shouldEmptySack = true;
+				}
+
+				// Real walk now, with full range
+				if (nextMiningTile != null)
+				{
+					Microbot.status = "DEBUG: Instant return to mining spot";
+					Rs2Walker.walkTo(nextMiningTile, 10);
+					status = MLMStatus.MINING;
+				}
+			}
+		}
+		else
+		{
+			Rs2Walker.walkTo(hopperDeposit, 15);
+		}
+	}
 
     private void bankItems()
     {
