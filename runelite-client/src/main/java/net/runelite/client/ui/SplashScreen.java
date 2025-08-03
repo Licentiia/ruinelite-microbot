@@ -24,7 +24,10 @@
  */
 package net.runelite.client.ui;
 
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.ruinelite.ui.components.FlippableLabel;
 import net.runelite.client.ui.laf.RuneLiteLAF;
 import net.runelite.client.util.ImageUtil;
 
@@ -52,12 +55,11 @@ public class SplashScreen extends JFrame implements ActionListener
 	private final JLabel subAction = new JLabel();
 	private final Timer timer;
 
-	private final JLabel duckLabel = new JLabel();
-	private BufferedImage rDuck, lDuck;
-	private boolean movingRight = true;
+	// Duck gif
+	private final FlippableLabel duckLabel = new FlippableLabel();
+	private ImageIcon duckGif;
 	private int duckX = 0;
-	private static final int DUCK_WIDTH = 24;
-	private static final int DUCK_HEIGHT = 24;
+	private int xVelocity = 1; //
 
 	private volatile double overallProgress = 0;
 	private volatile String actionText = "Loading";
@@ -93,13 +95,11 @@ public class SplashScreen extends JFrame implements ActionListener
 
 		int y = WIDTH + 20;
 
-		rDuck = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/duck/duck-right.png");
-		lDuck = ImageUtil.loadImageResource(SplashScreen.class, "ruinelite/duck/duck-left.png");
-
-		duckLabel.setIcon(new ImageIcon(rDuck));
-		duckLabel.setBounds(duckX, y, DUCK_WIDTH, DUCK_HEIGHT);
+		duckGif = new ImageIcon(Objects.requireNonNull(Rs2Antiban.class.getResource("walkingduckparty.gif")));
+		duckLabel.setIcon(duckGif);
+		duckLabel.setBounds(duckX, y, duckGif.getIconWidth(), duckGif.getIconHeight());
 		pane.add(duckLabel);
-		y += DUCK_HEIGHT + PAD;
+		y += duckGif.getIconHeight() + PAD;
 
 		progress.setVisible(true);
 
@@ -116,7 +116,7 @@ public class SplashScreen extends JFrame implements ActionListener
 		progress.setBorder(new EmptyBorder(0, 0, 0, 0));
 		progress.setBounds(0, y, WIDTH, 14);
 		progress.setFont(font);
-		progress.setIndeterminate(true);
+		progress.setIndeterminate(false);
 		progress.setUI(new BasicProgressBarUI()
 		{
 			@Override
@@ -158,31 +158,19 @@ public class SplashScreen extends JFrame implements ActionListener
 		action.setText(actionText);
 		subAction.setText(subActionText);
 
-		int speed = 5;
-		if (movingRight)
+		// Move the GIF slowly
+		duckX += xVelocity;
+		if (duckX >= WIDTH - duckGif.getIconWidth() || duckX <= 0)
 		{
-			duckX += speed;
-			if (duckX >= WIDTH - DUCK_WIDTH)
-			{
-				movingRight = false;
-				duckLabel.setIcon(new ImageIcon(lDuck));
-			}
+			xVelocity = -xVelocity; // Reverse direction
+			duckLabel.flip();      // Flip the duck horizontally
 		}
-		else
-		{
-			duckX -= speed;
-			if (duckX <= 0)
-			{
-				movingRight = true;
-				duckLabel.setIcon(new ImageIcon(rDuck));
-			}
-		}
-		duckLabel.setLocation(duckX, duckLabel.getY());
+		duckLabel.setLocation(duckX, duckLabel.getY()); // Update position
 
+		// Progress bar logic
 		progress.setMaximum(1000);
 		progress.setValue((int) (overallProgress * 1000));
 
-		String progressText = this.progressText;
 		if (progressText == null)
 		{
 			progress.setStringPainted(false);
