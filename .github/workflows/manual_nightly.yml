@@ -37,4 +37,4 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            /home/runner/work/Microbot/Microbot/runelite-client/target/microbot-*.jar
+            runelite-client/target/microbot-*.jar
