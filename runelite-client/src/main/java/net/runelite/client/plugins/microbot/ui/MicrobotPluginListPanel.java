@@ -66,7 +66,7 @@ import java.util.stream.Stream;
 @Singleton
 public class MicrobotPluginListPanel extends PluginPanel
 {
-	private static final String RUNELITE_GROUP_NAME = RuneLiteConfig.class.getAnnotation(ConfigGroup.class).value();
+	private static final String RUNELITE_GROUP_NAME = "microbot";
 	private static final String PINNED_PLUGINS_CONFIG_KEY = "pinnedPlugins";
 	private static final ImmutableList<String> CATEGORY_TAGS = ImmutableList.of(
 		"Combat",
