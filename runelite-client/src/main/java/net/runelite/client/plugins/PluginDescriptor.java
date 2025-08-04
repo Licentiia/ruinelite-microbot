@@ -32,6 +32,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface PluginDescriptor
 {
+	String SnifdenSplif = "<html>[<font color=#b8f704M>RuinElite</font>] ";
     String DrDeath = "<html>[<font color=#FF0000>DD</font>]";
     String Bee = "<html>[<font color=#FFD700><b>B</b></font>] ";
     String Nate = "<html>[<font color=orange>N</font>] ";
