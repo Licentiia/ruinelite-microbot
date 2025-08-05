@@ -96,15 +96,16 @@ public class AutoWoodcuttingScript extends Script {
                 }
                 
                 if (!Rs2Inventory.hasItem("axe")) {
-                    if (!Rs2Equipment.hasEquippedContains("axe")) {
+                    if (!Rs2Equipment.isWearing("axe")) {
                         Microbot.showMessage("Unable to find axe in inventory/equipped");
                         shutdown();
                         return;
                     }
                 }
 
-                if (state != State.RESETTING && (Rs2Player.isMoving() || Rs2Player.isAnimating()))
-                    return;
+				if (state != State.RESETTING &&
+					(Rs2Player.isMoving() || (Rs2Player.isAnimating() && !isStuckWarmingHands(config))))
+					return;
 
                 if (Rs2AntibanSettings.actionCooldownActive)
                     return;
@@ -192,6 +193,8 @@ public class AutoWoodcuttingScript extends Script {
 
                 if (Rs2Inventory.contains(config.TREE().getLog())) return;
 
+				Rs2Antiban.actionCooldown();
+
                 walkBack(config);
 
                 if (config.firemakeOnly()){
@@ -225,22 +228,22 @@ public class AutoWoodcuttingScript extends Script {
             Rs2Walker.walkFastCanvas(fireSpot);
             cannotLightFire = false;
         }
-        if (!isFiremake() && !useCampfire) {
+        if (!isFiremake(config) && !useCampfire) {
             Rs2Inventory.waitForInventoryChanges(() -> {
                 Rs2Inventory.use("tinderbox");
                 sleepUntil(Rs2Inventory::isItemSelected);
                 Rs2Inventory.useLast(config.TREE().getLogID());
             }, 300, 100);
         }
-        else if (!isFiremake() && useCampfire) {
+        else if (!isFiremake(config) && useCampfire) {
             Rs2Inventory.useItemOnObject(config.TREE().getLogID(),fire.getId());
             sleepUntil(() -> (!Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to burn?", null, false) != null), 5000);
             Rs2Random.waitEx(400,200);
             Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
         }
-        sleepUntil(() -> !isFiremake());
-        if (!isFiremake()) {sleepUntil(() -> cannotLightFire, 1500);}
-        if (!cannotLightFire && isFiremake()) {sleepUntil(() -> Rs2Player.waitForXpDrop(Skill.FIREMAKING, 40000), 40000);}
+        sleepUntil(() -> !isFiremake(config));
+        if (!isFiremake(config)) {sleepUntil(() -> cannotLightFire, 1500);}
+        if (!cannotLightFire && isFiremake(config)) {sleepUntil(() -> Rs2Player.waitForXpDrop(Skill.FIREMAKING, 40000), 40000);}
     }
 
     private WorldPoint fireSpot(int distance) {
@@ -268,12 +271,21 @@ public class AutoWoodcuttingScript extends Script {
         return fireSpot(distance + 1);
     }
 
-    private boolean isFiremake() {
-        if (cannotLightFire) return false;
-        return Rs2Player.isAnimating(1800) && BURNING_ANIMATION_IDS.contains(Rs2Player.getLastAnimationID());
-    }
-    
-    private void fletchArrowShaft(AutoWoodcuttingConfig config) {
+	private boolean isFiremake(AutoWoodcuttingConfig config) {
+		if (cannotLightFire) return false;
+
+		return Rs2Player.isAnimating(1800)
+			&& BURNING_ANIMATION_IDS.contains(Rs2Player.getLastAnimationID())
+			&& Rs2Inventory.contains(config.TREE().getLog());
+	}
+
+	private boolean isStuckWarmingHands(AutoWoodcuttingConfig config) {
+		return Rs2Player.isAnimating() &&
+			BURNING_ANIMATION_IDS.contains(Rs2Player.getLastAnimationID()) &&
+			!Rs2Inventory.contains(config.TREE().getLog());
+	}
+
+	private void fletchArrowShaft(AutoWoodcuttingConfig config) {
         Rs2Inventory.combineClosest("knife", config.TREE().getLog());
         sleepUntil(Rs2Widget::isProductionWidgetOpen, 5000);
         Rs2Widget.clickWidget("arrow shafts");
