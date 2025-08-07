@@ -207,7 +207,7 @@ public class ClientUI
 		EventBus eventBus,
 		@Named("safeMode") boolean safeMode,
 		@Named("runelite.title") String title,
-		@Named("microbot.version") String version
+		@Named("combined.version") String version
 	)
 	{
 		this.config = config;
