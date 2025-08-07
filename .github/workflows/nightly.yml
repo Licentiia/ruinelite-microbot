@@ -29,17 +29,11 @@ jobs:
       - name: Build Shaded JAR
         run: mvn clean package
 
-      - name: Extract Ruinelite version from pom.xml
+      - name: Extract combined version from pom.xml
         id: version
         run: |
-          version=$(grep -oPm1 "(?<=<ruinelite.version>)[^<]+" runelite-client/pom.xml)
+          version=$(grep -oPm1 "(?<=<combined.version>)[^<]+" runelite-client/pom.xml)
           echo "version=$version" >> $GITHUB_OUTPUT
-
-      - name: Extract combined version from pom.xml
-        id: combined_version
-        run: |
-          combined=$(grep -oPm1 '(?<=<combined.version>)[^<]+' runelite-client/pom.xml)
-          echo "combined=$combined" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: "marvinpinto/action-automatic-releases@latest"
@@ -49,5 +43,5 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            runelite-client/target/microbot-${{ steps.combined_version.outputs.combined }}.jar
+            runelite-client/target/microbot-${{ steps.version.outputs.version }}.jar
 
