@@ -292,7 +292,7 @@ public class SplashScreen extends JFrame implements ActionListener
 		{
 			var props = new java.util.Properties();
 			props.load(SplashScreen.class.getResourceAsStream("/version.properties"));
-			return props.getProperty("microbot.version", "unknown");
+			return props.getProperty("combined.version", "unknown");
 		}
 		catch (Exception e)
 		{
