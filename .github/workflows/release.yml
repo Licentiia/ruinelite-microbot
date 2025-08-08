@@ -28,11 +28,13 @@ jobs:
       - name: Build Shaded JAR
         run: mvn clean package
 
-      - name: Extract combined version from pom.xml
+      - name: Extract microbot & ruinelite versions from pom.xml
         id: version
         run: |
-          version=$(grep -oPm1 "(?<=<combined.version>)[^<]+" runelite-client/pom.xml)
-          echo "version=$version" >> $GITHUB_OUTPUT
+          microbot=$(grep -oPm1 "(?<=<microbot.version>)[^<]+" runelite-client/pom.xml)
+          ruinelite=$(grep -oPm1 "(?<=<ruinelite.version>)[^<]+" runelite-client/pom.xml)
+          combined="${microbot}_${ruinelite}"
+          echo "version=$combined" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: "marvinpinto/action-automatic-releases@latest"
