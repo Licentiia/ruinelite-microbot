@@ -42,7 +42,7 @@
 		<git.dirty>false</git.dirty>
 		<shade.skip>false</shade.skip>
 		<microbot.version>1.9.7</microbot.version>
-        <ruinelite.version>0.0.0</ruinelite.version>
+        <ruinelite.version>1.0.0</ruinelite.version>
         <combined.version>${microbot.version}_${ruinelite.version}</combined.version>
 
 		<microbot.commit.sha>nogit</microbot.commit.sha>
