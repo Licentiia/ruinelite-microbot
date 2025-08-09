@@ -7,6 +7,7 @@ import net.runelite.client.plugins.microbot.thieving.stalls.constants.StallLoot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 
 import javax.inject.Inject;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 
 @AllArgsConstructor(onConstructor_ = @Inject)
 public class HosidiusFruitThievingSpot implements IStallThievingSpot {
@@ -34,7 +35,7 @@ public class HosidiusFruitThievingSpot implements IStallThievingSpot {
 
     @Override
     public void bank() {
-        Rs2Bank.walkToBankAndUseBank();
+        Rs2Bank.walkToBankAndUseBank(BankLocation.HOSIDIUS);
         Rs2Bank.depositAll();
         Rs2Bank.closeBank();
     }
