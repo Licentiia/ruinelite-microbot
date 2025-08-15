@@ -124,13 +124,13 @@ jobs:
           fi
           COMBINED_BADGE_URL="https://img.shields.io/badge/RuinElite-${COMBINED}-blue?style=flat"
 
-          # Build the table text without here-docs (YAML-safe)
-          printf '%s\n' \
-            '| Component | Version | Status |' \
-            '|---|---|---|' \
-            "| **RuinElite** | \`RUINELITE_VERSION_REPL\` | ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat) |" \
-            "| **Microbot** (upstream) | \`MICROBOT_RELEASE_REPL\` | ![Microbot Sync](${STATUS_BADGE}) |" \
-            > /tmp/version_sync_block.md
+          # Build the table text without heredocs (YAML-safe)
+          {
+            echo "| Component | Version | Status |"
+            echo "|---|---|---|"
+            echo "| **RuinElite** | \`RUINELITE_VERSION_REPL\` | ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat) |"
+            echo "| **Microbot** (upstream) | \`MICROBOT_RELEASE_REPL\` | ![Microbot Sync](${STATUS_BADGE}) |"
+          } > /tmp/version_sync_block.md
 
           sed -i "s|RUINELITE_VERSION_REPL|$RUINELITE_VERSION|g" /tmp/version_sync_block.md
           sed -i "s|MICROBOT_RELEASE_REPL|$MICROBOT_RELEASE|g" /tmp/version_sync_block.md
@@ -154,24 +154,24 @@ jobs:
       - name: Inject table into README between SYNC markers
         run: |
           set -e
-          START="<!-- SYNC:START -->"
-          END="<!-- SYNC:END -->"
-          awk -v start="$START" -v end="$END" -v file="/tmp/version_sync_block.md" '
-            $0 ~ start {print; system("cat " file); skip=1; next}
-            $0 ~ end   {print; skip=0; next}
-            skip!=1 {print}
-          ' README.md > README.new && mv README.new README.md
+          printf '%s\n' \
+            'BEGIN { start="<!-- SYNC:START -->"; end="<!-- SYNC:END -->"; }' \
+            '$0 ~ start { print; system("cat /tmp/version_sync_block.md"); skip=1; next }' \
+            '$0 ~ end   { print; skip=0; next }' \
+            'skip!=1 { print }' \
+            > /tmp/inject_sync.awk
+          awk -f /tmp/inject_sync.awk README.md > README.new && mv README.new README.md
 
       - name: Inject badge into README between BADGE markers
         run: |
           set -e
-          START="<!-- BADGE:START -->"
-          END="<!-- BADGE:END -->"
-          awk -v start="$START" -v end="$END" -v file="/tmp/version_badge_block.md" '
-            $0 ~ start {print; system("cat " file); skip=1; next}
-            $0 ~ end   {print; skip=0; next}
-            skip!=1 {print}
-          ' README.md > README.new && mv README.new README.md
+          printf '%s\n' \
+            'BEGIN { start="<!-- BADGE:START -->"; end="<!-- BADGE:END -->"; }' \
+            '$0 ~ start { print; system("cat /tmp/version_badge_block.md"); skip=1; next }' \
+            '$0 ~ end   { print; skip=0; next }' \
+            'skip!=1 { print }' \
+            > /tmp/inject_badge.awk
+          awk -f /tmp/inject_badge.awk README.md > README.new && mv README.new README.md
 
       - name: Commit changes
         if: env.DRY_RUN != 'true'
@@ -181,6 +181,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if ! git diff --quiet; then
             git add README.md
-            git commit -m "chore: update Version Sync (Microbot: ${{ env.MICROBOT_VERSION }} | Status: ${{ env.STATUS_TEXT }})"
+            git commit -m "chore: update Version Sync (Microbot: $MICROBOT_VERSION | Status: $STATUS_TEXT)"
             git push
           fi
