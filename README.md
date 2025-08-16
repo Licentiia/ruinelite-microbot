@@ -2,11 +2,15 @@
   <img src="banner.png" alt="RuinElite x Microbot Banner" />
 </p>
 
+<!-- TODO: Clean up / refactor -->
+
 
 **RuinElite x Microbot** is my personal fork of the [Microbot](https://github.com/microbot-rs/microbot) project — a RuneLite-based automation framework for Old School RuneScape.  
 The goal is to keep it **up-to-date** with Microbot while adding my own twist through custom scripts, plugins, UI changes, and unique features.
 
-<div style="text-align: center;">
+---
+
+<div align="center">
 
 <!-- BADGE:START -->
 ![RuinElite Release](https://img.shields.io/badge/RuinElite-1.9.8_1.0.0-blue)
