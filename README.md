@@ -13,7 +13,7 @@ The goal is to keep it **up-to-date** with Microbot while adding my own twist th
 <div align="center">
 
 <!-- BADGE:START -->
-![RuinElite Release](https://img.shields.io/badge/RuinElite-1.9.7_1.0.0-blue?style=flat)
+![RuinElite Release](https://img.shields.io/badge/RuinElite-1.9.8_1.0.0-blue?style=flat)
 <!-- BADGE:END -->
 ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat)
 ![License](https://img.shields.io/github/license/Licentiia/ruinelite-microbot?style=flat)
