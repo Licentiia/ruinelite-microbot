@@ -31,9 +31,7 @@ jobs:
           set -e
           eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/releases/latest" > /tmp/microbot_release.json
           MICROBOT_RELEASE_TAG=$(jq -r .tag_name /tmp/microbot_release.json)
-          # Try to parse a semantic version from asset names like microbot-1.9.8.jar
           MICROBOT_VERSION=$(jq -r '.assets[].name' /tmp/microbot_release.json | grep -Eo '([0-9]+\.[0-9]+\.[0-9]+)' | head -n1 || true)
-          # Fallback to the tag if we couldn't parse (e.g., if assets change)
           if [ -z "$MICROBOT_VERSION" ]; then MICROBOT_VERSION="$MICROBOT_RELEASE_TAG"; fi
           echo "MICROBOT_RELEASE_TAG=$MICROBOT_RELEASE_TAG" >> $GITHUB_ENV
           echo "MICROBOT_VERSION=$MICROBOT_VERSION" >> $GITHUB_ENV
@@ -42,8 +40,8 @@ jobs:
         id: microbot_release_sha
         run: |
           set -e
-          # Resolve the release tag (e.g., 'nightly') to the underlying commit sha
-          eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/git/ref/tags/${MICROBOT_RELEASE_TAG}" > /tmp/tagref.json
+          # NOTE: refs (plural) is correct
+          eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/git/refs/tags/${MICROBOT_RELEASE_TAG}" > /tmp/tagref.json
           TAG_OBJ_SHA=$(jq -r .object.sha /tmp/tagref.json)
           TAG_OBJ_TYPE=$(jq -r .object.type /tmp/tagref.json)
           if [ "$TAG_OBJ_TYPE" = "commit" ]; then
@@ -59,7 +57,6 @@ jobs:
         run: |
           set -e
           MAIN_SHA=$(eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/commits/main" | jq -r .sha)
-          # development may exist; if not, treat it as equal to the release commit (i.e., no “ahead”)
           if DEV_JSON=$(eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/commits/development"); then
             DEV_SHA=$(echo "$DEV_JSON" | jq -r .sha)
           else
@@ -80,7 +77,6 @@ jobs:
           fi
           echo "RUINELITE_TAG=$RUIN_REL" >> $GITHUB_ENV
 
-          # Expect tags like MICROBOT_RUINELITE (e.g., 1.9.8_1.0.1)
           if echo "$RUIN_REL" | grep -q "_"; then
             MICROBOT_PART="${RUIN_REL%%_*}"
             RUINELITE_PART="${RUIN_REL##*_}"
@@ -96,26 +92,21 @@ jobs:
         id: decide
         run: |
           set -e
-          MICROBOT_RELEASE="$MICROBOT_VERSION"   # display-friendly version (e.g., 1.9.8)
+          MICROBOT_RELEASE="$MICROBOT_VERSION"
           RUINELITE_VERSION="$RUINELITE_PART"
 
-          # Default status: Synced (green)
           STATUS_TEXT="Synced"
           STATUS_BADGE="https://img.shields.io/badge/Microbot-Synced-brightgreen?style=flat"
-
-          # 1) If our tag encodes a Microbot part AND it's not the latest display version -> RED
           if [ -n "$MICROBOT_PART" ] && [ "$MICROBOT_PART" != "$MICROBOT_RELEASE" ]; then
             STATUS_TEXT="New Release Available"
             STATUS_BADGE="https://img.shields.io/badge/Microbot-New%20Release%20Available-red?style=flat"
           else
-            # 2) We're on latest release; check if development is ahead of the release commit -> YELLOW if ahead
             if [ "$DEV_SHA" != "$RELEASE_COMMIT_SHA" ]; then
               STATUS_TEXT="Nightly Available"
               STATUS_BADGE="https://img.shields.io/badge/Microbot-Nightly%20Available-yellow?style=flat"
             fi
           fi
 
-          # --- Build RuinElite combined badge text ---
           if echo "${RUINELITE_TAG}" | grep -q "_"; then
             COMBINED="${RUINELITE_TAG}"
           else
@@ -127,54 +118,51 @@ jobs:
           fi
           COMBINED_BADGE_URL="https://img.shields.io/badge/RuinElite-${COMBINED}-blue?style=flat"
 
-          # Build the table block
-          cat > /tmp/version_sync_block.md <<'EOF'
-  | Component | Version | Status |
-  |---|---|---|
-  | **RuinElite** | `RUINELITE_VERSION_REPL` | ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat) |
-  | **Microbot** (upstream) | `MICROBOT_RELEASE_REPL` | ![Microbot Sync](STATUS_BADGE_REPL) |
-  EOF
-  
-  
-  sed -i "s|RUINELITE_VERSION_REPL|$RUINELITE_VERSION|g" /tmp/version_sync_block.md
-  sed -i "s|RUINELITE_BADGE_REPL|https://img.shields.io/badge/RuinElite-${RUINELITE_VERSION}-blue?style=flat|g" /tmp/version_sync_block.md
-  sed -i "s|MICROBOT_RELEASE_REPL|$MICROBOT_RELEASE|g" /tmp/version_sync_block.md
-  sed -i "s|STATUS_BADGE_REPL|$STATUS_BADGE|g" /tmp/version_sync_block.md
-  
-  # Build the single-line badge block
-  echo "![RuinElite Release](${COMBINED_BADGE_URL})" > /tmp/version_badge_block.md
-  
-  echo "STATUS_TEXT=$STATUS_TEXT" >> $GITHUB_ENV
+          # Build the table text without here-docs (YAML-safe)
+          printf '%s\n' \
+            '| Component | Version | Status |' \
+            '|---|---|---|' \
+            "| **RuinElite** | \`RUINELITE_VERSION_REPL\` | ![Build](https://img.shields.io/github/actions/workflow/status/${{ github.repository }}/CI.yml?branch=main&label=Build&style=flat) |" \
+            "| **Microbot** (upstream) | \`MICROBOT_RELEASE_REPL\` | ![Microbot Sync](${STATUS_BADGE}) |" \
+            > /tmp/version_sync_block.md
 
-- name: Inject table into README between SYNC markers
-  run: |
-    set -e
-    START="<!-- SYNC:START -->"
-    END="<!-- SYNC:END -->"
-    awk -v start="$START" -v end="$END" -v file="/tmp/version_sync_block.md" '
-      $0 ~ start {print; system("cat " file); skip=1; next}
-      $0 ~ end   {print; skip=0; next}
-      skip!=1 {print}
-    ' README.md > README.new && mv README.new README.md
+          sed -i "s|RUINELITE_VERSION_REPL|$RUINELITE_VERSION|g" /tmp/version_sync_block.md
+          sed -i "s|MICROBOT_RELEASE_REPL|$MICROBOT_RELEASE|g" /tmp/version_sync_block.md
 
-- name: Inject badge into README between BADGE markers
-  run: |
-    set -e
-    START="<!-- BADGE:START -->"
-    END="<!-- BADGE:END -->"
-    awk -v start="$START" -v end="$END" -v file="/tmp/version_badge_block.md" '
-      $0 ~ start {print; system("cat " file); skip=1; next}
-      $0 ~ end   {print; skip=0; next}
-      skip!=1 {print}
-    ' README.md > README.new && mv README.new README.md
+          # Single-line badge block
+          echo "![RuinElite Release](${COMBINED_BADGE_URL})" > /tmp/version_badge_block.md
 
-- name: Commit changes
-  run: |
-    set -e
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    if ! git diff --quiet; then
-      git add README.md
-      git commit -m "chore: update Version Sync (Microbot: ${{ env.MICROBOT_VERSION }} | Status: ${{ env.STATUS_TEXT }})"
-      git push
-    fi
+          echo "STATUS_TEXT=$STATUS_TEXT" >> $GITHUB_ENV
+
+      - name: Inject table into README between SYNC markers
+        run: |
+          set -e
+          START="<!-- SYNC:START -->"
+          END="<!-- SYNC:END -->"
+          awk -v start="$START" -v end="$END" -v file="/tmp/version_sync_block.md" '
+            $0 ~ start {print; system("cat " file); skip=1; next}
+            $0 ~ end   {print; skip=0; next}
+            skip!=1 {print}
+          ' README.md > README.new && mv README.new README.md
+
+      - name: Inject badge into README between BADGE markers
+        run: |
+          set -e
+          START="<!-- BADGE:START -->"
+          END="<!-- BADGE:END -->"
+          awk -v start="$START" -v end="$END" -v file="/tmp/version_badge_block.md" '
+            $0 ~ start {print; system("cat " file); skip=1; next}
+            $0 ~ end   {print; skip=0; next}
+            skip!=1 {print}
+          ' README.md > README.new && mv README.new README.md
+
+      - name: Commit changes
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add README.md
+            git commit -m "chore: update Version Sync (Microbot: ${{ env.MICROBOT_VERSION }} | Status: ${{ env.STATUS_TEXT }})"
+            git push
+          fi
