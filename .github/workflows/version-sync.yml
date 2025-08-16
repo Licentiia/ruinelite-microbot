@@ -1,4 +1,4 @@
-name: Update Version Sync in README
+name: Version sync
 
 on:
   workflow_dispatch:
@@ -30,11 +30,26 @@ jobs:
         run: |
           set -e
           eval curl -fsSL $GH_HEADERS "$GH_API/repos/$UPSTREAM/releases/latest" > /tmp/microbot_release.json
+          
+          # 1) Prefer tag_name, extract a version with 3+ numeric segments (e.g., 1.9.8 or 1.9.8.1)
           MICROBOT_RELEASE_TAG=$(jq -r .tag_name /tmp/microbot_release.json)
-          MICROBOT_VERSION=$(jq -r '.assets[].name' /tmp/microbot_release.json | grep -Eo '([0-9]+\.[0-9]+\.[0-9]+)' | head -n1 || true)
-          if [ -z "$MICROBOT_VERSION" ]; then MICROBOT_VERSION="$MICROBOT_RELEASE_TAG"; fi
+          MICROBOT_VERSION=$(echo "$MICROBOT_RELEASE_TAG" | grep -Eo '\b[0-9]+(\.[0-9]+){2,}\b' || true)
+          
+          # 2) Fallback to asset filenames if the tag_name didn’t contain a version
+          if [ -z "$MICROBOT_VERSION" ]; then
+            MICROBOT_VERSION=$(jq -r '.assets[].name' /tmp/microbot_release.json \
+              | grep -Eo '\b[0-9]+(\.[0-9]+){2,}\b' \
+              | head -n1 || true)
+          fi
+          
+          # 3) Final safety: if still empty, just use the tag itself
+          if [ -z "$MICROBOT_VERSION" ]; then
+            MICROBOT_VERSION="$MICROBOT_RELEASE_TAG"
+          fi
+          
           echo "MICROBOT_RELEASE_TAG=$MICROBOT_RELEASE_TAG" >> $GITHUB_ENV
           echo "MICROBOT_VERSION=$MICROBOT_VERSION" >> $GITHUB_ENV
+
 
       - name: Resolve Microbot release commit SHA
         id: microbot_release_sha
