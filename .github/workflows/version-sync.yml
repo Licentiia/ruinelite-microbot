@@ -83,27 +83,55 @@ jobs:
           echo "MAIN_SHA=$MAIN_SHA" >> $GITHUB_ENV
           echo "DEV_SHA=$DEV_SHA" >> $GITHUB_ENV
 
-      - name: Dev Sync - upstream/development vs our development
+      - name: Dev Sync - upstream/development vs our development (git-based)
         id: devsync
         run: |
           set -e
-          OWNER="${OWNER_REPO%%/*}"   # org/user of this repo
-          # Compare base = upstream:development ... head = OWNER:development (assumes fork name matches upstream repo name)
-          COMPARE=$(eval curl -fsSL $GH_HEADERS "$GH_API/repos/${UPSTREAM}/compare/development...${OWNER}:development")
-          BEHIND=$(echo "$COMPARE" | jq -r '.behind_by // 0')
-          AHEAD=$(echo "$COMPARE"  | jq -r '.ahead_by  // 0')
-          echo "DEV_BEHIND=$BEHIND" >> $GITHUB_ENV
+          # Ensure we have full history for accurate counts
+          git fetch --prune --unshallow origin || true
+
+          # Make sure our local refs exist
+          git fetch origin +refs/heads/development:refs/remotes/origin/development || true
+
+          # Add/fetch upstream (public) dev
+          git remote add upstream https://github.com/${UPSTREAM}.git || true
+          git fetch upstream +refs/heads/development:refs/remotes/upstream/development || true
+
+          # If upstream/dev doesn't exist, treat as in sync
+          if ! git rev-parse --verify refs/remotes/upstream/development >/dev/null 2>&1; then
+            echo "DEV_AHEAD=0"  >> $GITHUB_ENV
+            echo "DEV_BEHIND=0" >> $GITHUB_ENV
+            echo "DEV_STATUS_TEXT=Synced" >> $GITHUB_ENV
+            echo "DEV_STATUS_BADGE=https://img.shields.io/badge/Microbot%20Dev-Synced-brightgreen?style=flat" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # If our dev is missing, we're behind by all upstream commits
+          if ! git rev-parse --verify refs/remotes/origin/development >/dev/null 2>&1; then
+            BEHIND=$(git rev-list --count refs/remotes/upstream/development)
+            echo "DEV_AHEAD=0"        >> $GITHUB_ENV
+            echo "DEV_BEHIND=$BEHIND" >> $GITHUB_ENV
+            echo "DEV_STATUS_TEXT=Nightly Available" >> $GITHUB_ENV
+            echo "DEV_STATUS_BADGE=https://img.shields.io/badge/Microbot%20Dev-Nightly%20Available-yellow?style=flat" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Count ahead/behind between our dev and upstream dev
+          COUNTS=$(git rev-list --left-right --count refs/remotes/origin/development...refs/remotes/upstream/development)
+          AHEAD=$(echo "$COUNTS" | awk '{print $1}')
+          BEHIND=$(echo "$COUNTS" | awk '{print $2}')
+
           echo "DEV_AHEAD=$AHEAD"   >> $GITHUB_ENV
+          echo "DEV_BEHIND=$BEHIND" >> $GITHUB_ENV
 
           if [ "$BEHIND" -eq 0 ]; then
-            DEV_STATUS_TEXT="Synced"
-            DEV_STATUS_BADGE="https://img.shields.io/badge/Microbot%20Dev-Synced-brightgreen?style=flat"
+            echo "DEV_STATUS_TEXT=Synced" >> $GITHUB_ENV
+            echo "DEV_STATUS_BADGE=https://img.shields.io/badge/Microbot%20Dev-Synced-brightgreen?style=flat" >> $GITHUB_ENV
           else
-            DEV_STATUS_TEXT="Nightly Available"
-            DEV_STATUS_BADGE="https://img.shields.io/badge/Microbot%20Dev-Nightly%20Available-yellow?style=flat"
+            echo "DEV_STATUS_TEXT=Nightly Available" >> $GITHUB_ENV
+            echo "DEV_STATUS_BADGE=https://img.shields.io/badge/Microbot%20Dev-Nightly%20Available-yellow?style=flat" >> $GITHUB_ENV
           fi
-          echo "DEV_STATUS_TEXT=$DEV_STATUS_TEXT" >> $GITHUB_ENV
-          echo "DEV_STATUS_BADGE=$DEV_STATUS_BADGE" >> $GITHUB_ENV
+
 
       # --- Microbot (development): parse nightly JAR asset version (e.g., microbot-1.9.8.1.jar) ---
       - name: Get Microbot nightly dev version from nightly assets
