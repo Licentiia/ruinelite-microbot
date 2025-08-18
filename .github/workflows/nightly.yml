@@ -1,4 +1,4 @@
-name: Nightly release
+name: Nightly Build
 
 on:
   schedule:
@@ -34,14 +34,14 @@ jobs:
         run: |
           microbot=$(grep -oPm1 "(?<=<microbot.version>)[^<]+" runelite-client/pom.xml)
           ruinelite=$(grep -oPm1 "(?<=<ruinelite.version>)[^<]+" runelite-client/pom.xml)
-          combined="${microbot}_${ruinelite}"
+          combined="${microbot}-${ruinelite}"
           echo "version=$combined" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "nightly"
+          automatic_release_tag: "nightly-build"
           prerelease: false
           title: "Nightly Build"
           files: |
