@@ -34,7 +34,7 @@ jobs:
         run: |
           microbot=$(grep -oPm1 "(?<=<microbot.version>)[^<]+" runelite-client/pom.xml)
           ruinelite=$(grep -oPm1 "(?<=<ruinelite.version>)[^<]+" runelite-client/pom.xml)
-          combined="${microbot}_${ruinelite}"
+          combined="${microbot}-${ruinelite}"
           echo "version=$combined" >> $GITHUB_OUTPUT
 
       - name: Create Release
