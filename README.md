@@ -39,7 +39,7 @@ The goal is to keep it **up-to-date** with Microbot while adding my own twist th
 |---|---|---|
 | **RuinElite** | `1.0.0` | ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat) |
 | **Microbot** (*upstream*) | `1.9.8.1` | ![Upstream](https://img.shields.io/badge/Microbot-Synced-brightgreen?style=flat) |
-| **Microbot** (*development*) | `1.9.8.3` | ![Dev](https://img.shields.io/badge/Microbot%20Dev-Nightly%20Available-yellow?style=flat) |
+| **Microbot** (*development*) | `1.9.8.3` | ![Dev](https://img.shields.io/badge/Microbot%20Dev-Synced-brightgreen?style=flat) |
 <!-- SYNC:END -->
 
 <!-- ![Build Status](https://github.com/Licentiia/ruinelite-microbot/actions/workflows/CI.yml/badge.svg?branch=main) -->
