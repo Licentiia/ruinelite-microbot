@@ -13,7 +13,7 @@ The goal is to keep it **up-to-date** with Microbot while adding my own twist th
 <div align="center">
 
 <!-- BADGE:START -->
-![RuinElite Release](https://img.shields.io/badge/RuinElite-1.9.8_1.0.0-blue?style=flat)
+![RuinElite Release](https://img.shields.io/badge/RuinElite-1.9.8.1_1.0.0-blue?style=flat)
 <!-- BADGE:END -->
 ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat)
 ![License](https://img.shields.io/github/license/Licentiia/ruinelite-microbot?style=flat)
@@ -38,7 +38,8 @@ The goal is to keep it **up-to-date** with Microbot while adding my own twist th
 | Component | Version | Status |
 |---|---|---|
 | **RuinElite** | `1.0.0` | ![Build](https://img.shields.io/github/actions/workflow/status/Licentiia/ruinelite-microbot/CI.yml?branch=main&label=Build&style=flat) |
-| **Microbot** (upstream) | `1.9.8.1` | ![Microbot Sync](https://img.shields.io/badge/Microbot-New%20Release%20Available-red?style=flat) |
+| **Microbot** (*upstream*) | `1.9.8.1` | ![Upstream](https://img.shields.io/badge/Microbot-Synced-brightgreen?style=flat) |
+| **Microbot** (*development*) | `1.9.8.3` | ![Dev](https://img.shields.io/badge/Microbot%20Dev-Nightly%20Available-yellow?style=flat) |
 <!-- SYNC:END -->
 
 <!-- ![Build Status](https://github.com/Licentiia/ruinelite-microbot/actions/workflows/CI.yml/badge.svg?branch=main) -->
