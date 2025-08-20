@@ -9,7 +9,8 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can choose a different runner if needed
+    if: "! contains(github.event.head_commit.message, '[skip release]')"
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
